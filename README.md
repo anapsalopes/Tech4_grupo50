@@ -19,9 +19,9 @@ Algumas das aplicações das rotinas implementadas são: identificação e desta
 
 # Produtos gerados
 
-- Vídeo destacando análise das emoções e detecção de atividades: output_video_tech4.mp4
-- Relatório da análise do vídeo: relatorio_video.docx
-- Arquivo resumo do relatório: sumario.txt
+Vídeo destacando análise das emoções e detecção de atividades: output_video_tech4.mp4
+Relatório da análise do vídeo: relatorio_video.docx
+Arquivo resumo do relatório: sumario.txt
 
 
 # Onde os usuários podem encontrar ajuda sobre seu projeto
@@ -33,7 +33,7 @@ No e-mail e/ou discord dos autores do projeto
 
 - Ana Paula de Sá Lopes de Simone (anap.salopes/anapsalopes/analopes@correios.com.br)
 - Christiane Pinheiro Campelo da Silva (christiane_57973/chrispinheiro/christiane@correios.com.br)
-- Leandro Juvenal Marques (leandro_91731/leandrojuvmar/leandrojuvenal@correios.com.br)
+- Leandro Juvenal Marques (/leandrojuvmar/leandro_91731/leandrojuvenal@correios.com.br)
 
 
 # Bibliotecas utilizadas
@@ -48,6 +48,10 @@ No e-mail e/ou discord dos autores do projeto
 - TensorFlow
 - warnings
 
+# Links com arquivos de video
+- Entrada: tech4.mp4
+- saida: output_video_tech4.mp4
+- Link: https://drive.google.com/drive/folders/1lO2IaA_KcFjXOt9lwYXOtHDIxQXhTPqY?usp=drive_link
 
 # Como instalar e rodar o projeto
 
