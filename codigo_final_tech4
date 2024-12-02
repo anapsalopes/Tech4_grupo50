@@ -1,0 +1,209 @@
+import cv2
+import mediapipe as mp
+import os
+import numpy as np
+from tqdm import tqdm
+from deepface import DeepFace
+from docx import Document
+import tensorflow as tf
+import warnings
+
+# Reduzir os logs do TensorFlow
+tf.get_logger().setLevel('ERROR')  # Suprime logs informativos e de aviso
+
+# Redirecionar a saída padrão de erro para evitar mostrar warnings
+warnings.filterwarnings("ignore")
+
+# Suprimir logs do TensorFlow para o terminal
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # Ignora avisos e logs informativos
+
+def detect_pose_and_count_arm_movements(video_path, output_path, doc_path):
+    # Inicializar MediaPipe Pose e Hands
+    mp_pose = mp.solutions.pose
+    mp_hands = mp.solutions.hands
+    pose = mp_pose.Pose()
+    hands = mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5)
+    mp_drawing = mp.solutions.drawing_utils
+
+    # Capturar vídeo
+    cap = cv2.VideoCapture(video_path)
+    if not cap.isOpened():
+        print("Erro ao abrir o vídeo.")
+        return
+
+    # Configurações de saída de vídeo
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    fps = int(cap.get(cv2.CAP_PROP_FPS))
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
+
+    # Variáveis para análise de movimentos dos braços
+    arm_up = False
+    arm_movements_count = 0
+
+    # Variáveis para análise de gestos de mãos
+    posicoes_anteriores = []
+    velocidades_todas = []
+    aceleracoes_todas = []
+
+    # Contadores de emoções e atividades
+    contador_emocoes = {}
+    contador_atividades = {
+        "escrevendo": 0,
+        "lendo": 0,
+        "dancando": 0,
+        "apertando_maos": 0
+    }
+
+    # Criar relatório Word
+    doc = Document()
+    doc.add_heading("Relatório de Análise de Vídeo", level=1)
+    doc.add_paragraph(f"Arquivo de entrada: {video_path}")
+    doc.add_paragraph(f"Arquivo de saída: {output_path}")
+    doc.add_paragraph("Resumo das detecções:")
+
+    # Funções auxiliares
+    def is_arm_up(landmarks):
+        left_eye = landmarks[mp_pose.PoseLandmark.LEFT_EYE.value]
+        right_eye = landmarks[mp_pose.PoseLandmark.RIGHT_EYE.value]
+        left_elbow = landmarks[mp_pose.PoseLandmark.LEFT_ELBOW.value]
+        right_elbow = landmarks[mp_pose.PoseLandmark.RIGHT_ELBOW.value]
+        return (left_elbow.y < left_eye.y) or (right_elbow.y < right_eye.y)
+
+    def calcular_velocidade(posicoes):
+        return [np.linalg.norm(np.array(posicoes[i]) - np.array(posicoes[i-1])) for i in range(1, len(posicoes))]
+
+    def calcular_aceleracao(velocidades):
+        return [abs(velocidades[i] - velocidades[i-1]) for i in range(1, len(velocidades))]
+
+    # Processamento de frames
+    for frame_idx in tqdm(range(total_frames), desc="Processando vídeo"):
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        # Converter frame para RGB
+        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+        # Análise de emoções com DeepFace
+        try:
+            result = DeepFace.analyze(frame, actions=['emotion'], enforce_detection=False)
+        except Exception as e:
+            print(f"Erro ao analisar emoções: {e}")
+            result = []
+
+        # Detecção de poses
+        results_pose = pose.process(rgb_frame)
+        if results_pose.pose_landmarks:
+            mp_drawing.draw_landmarks(frame, results_pose.pose_landmarks, mp_pose.POSE_CONNECTIONS)
+
+            # Verificar movimentos dos braços
+            if is_arm_up(results_pose.pose_landmarks.landmark):
+                if not arm_up:
+                    arm_up = True
+                    arm_movements_count += 1
+                    doc.add_paragraph(f"Frame {frame_idx}: Braço levantado. Total de movimentos: {arm_movements_count}.")
+            else:
+                arm_up = False
+
+        # Detecção de mãos
+        results_hands = hands.process(rgb_frame)
+        if results_hands.multi_hand_landmarks:
+            for hand_landmarks in results_hands.multi_hand_landmarks:
+                posicoes = [(lm.x, lm.y, lm.z) for lm in hand_landmarks.landmark]
+                if posicoes_anteriores:
+                    velocidades = calcular_velocidade(posicoes)
+                    velocidades_todas.append(np.mean(velocidades))
+                    if len(velocidades_todas) > 1:
+                        aceleracoes = calcular_aceleracao(velocidades_todas)
+                        aceleracoes_todas.append(np.mean(aceleracoes))
+
+                        # Detectar gestos bruscos
+                        if len(velocidades_todas) > 10:
+                            vel_media = np.mean(velocidades_todas)
+                            vel_std = np.std(velocidades_todas)
+                            acel_media = np.mean(aceleracoes_todas)
+                            acel_std = np.std(aceleracoes_todas)
+
+                            if np.mean(velocidades) > vel_media + 2 * vel_std:
+                                doc.add_paragraph(f"Frame {frame_idx}: Gestos bruscos detectados (Velocidade alta).")
+                            if len(aceleracoes_todas) > 1 and np.mean(aceleracoes) > acel_media + 2 * acel_std:
+                                doc.add_paragraph(f"Frame {frame_idx}: Comportamento atípico detectado (Aceleração alta).")
+
+                posicoes_anteriores = posicoes
+                mp_drawing.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
+
+        # Análise de emoções
+        for face in result:
+            if "region" in face:
+                x, y, w, h = face['region']['x'], face['region']['y'], face['region']['w'], face['region']['h']
+                dominant_emotion = face['dominant_emotion']
+                cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
+
+                # Traduzir emoções para o português
+                emocao_portugues = {
+                    "angry": "raiva",
+                    "disgust": "desgosto",
+                    "fear": "medo",
+                    "happy": "feliz",
+                    "sad": "triste",
+                    "surprise": "surpresa",
+                    "neutral": "neutro"
+                }
+
+                # Exibir a emoção detectada em português
+                cv2.putText(frame, emocao_portugues.get(dominant_emotion, dominant_emotion), 
+                            (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (36, 255, 12), 2)
+
+                # Contagem das emoções
+                if dominant_emotion in emocao_portugues:
+                    emocion = emocao_portugues[dominant_emotion]
+                    if emocion not in contador_emocoes:
+                        contador_emocoes[emocion] = 0
+                    contador_emocoes[emocion] += 1
+
+                doc.add_paragraph(f"Frame {frame_idx}: Emoção dominante: {dominant_emotion} ({emocao_portugues.get(dominant_emotion, dominant_emotion)}).")
+
+        # Marcar atividades (Exemplo fictício de atividades)
+        atividade_atual = "escrevendo"  # Exemplo fictício, substitua com a lógica real de identificação
+        if atividade_atual in contador_atividades:
+            contador_atividades[atividade_atual] += 1
+            doc.add_paragraph(f"Frame {frame_idx}: Atividade detectada: {atividade_atual}.")
+
+        # Mostrar contagem de movimentos dos braços no frame
+        cv2.putText(frame, f'Movimentos dos bracos: {arm_movements_count}', (10, 30),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2, cv2.LINE_AA)
+
+        # Escrever o frame no vídeo de saída
+        out.write(frame)
+
+        # Exibir o frame processado
+        cv2.imshow('Video', frame)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    # Salvar o relatório e liberar recursos
+    doc.add_paragraph("Resumo das emoções detectadas:")
+    for emocao, total in contador_emocoes.items():
+        doc.add_paragraph(f"{emocao.capitalize()}: {total} vezes")
+
+    doc.add_paragraph("Resumo das atividades detectadas:")
+    for atividade, total in contador_atividades.items():
+        doc.add_paragraph(f"{atividade.capitalize()}: {total} vezes")
+
+    doc.save(doc_path)
+    cap.release()
+    out.release()
+    cv2.destroyAllWindows()
+    print(f"Relatório salvo em {doc_path} e vídeo processado salvo em {output_path}")
+
+# Caminhos para entrada, saída e relatório
+script_dir = os.path.dirname(os.path.abspath(__file__))
+input_video_path = os.path.join(script_dir, 'tech4.mp4')
+output_video_path = os.path.join(script_dir, 'output_video_tech4.mp4')
+doc_path = os.path.join(script_dir, 'relatorio_video.docx')
+
+# Chamar a função para processar o vídeo e gerar o relatório
+detect_pose_and_count_arm_movements(input_video_path, output_video_path, doc_path)
