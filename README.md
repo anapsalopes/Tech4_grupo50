@@ -31,9 +31,9 @@ No e-mail e/ou discord dos autores do projeto
 
 # Autores do projeto (discord/github/e-mail)
 
-Ana Paula de Sá Lopes de Simone (anap.salopes/anapsalopes/analopes@correios.com.br)
-Christiane Pinheiro Campelo da Silva (christiane_57973/chrispinheiro/christiane@correios.com.br)
-Leandro Juvenal Marques (/leandrojuvmar/leandrojuvenal@correios.com.br)
+- Ana Paula de Sá Lopes de Simone (anap.salopes/anapsalopes/analopes@correios.com.br)
+- Christiane Pinheiro Campelo da Silva (christiane_57973/chrispinheiro/christiane@correios.com.br)
+- Leandro Juvenal Marques (/leandrojuvmar/leandrojuvenal@correios.com.br)
 
 
 # Bibliotecas utilizadas
