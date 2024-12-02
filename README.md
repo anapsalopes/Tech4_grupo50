@@ -38,19 +38,19 @@ No e-mail e/ou discord dos autores do projeto
 
 # Bibliotecas utilizadas
 
-OpenCV
-Mediapipe
-OS
-NumPy
-Tqdm
-DeepFace
-python-docx
-TensorFlow
-warnings
+- OpenCV
+- Mediapipe
+- OS
+- NumPy
+- Tqdm
+- DeepFace
+- python-docx
+- TensorFlow
+- warnings
 
 
 # Como instalar e rodar o projeto
 
-Instalar as bibliotecas listadas no item anterior (pip install {biblioteca})
-Executar o comando python.exe codigo_final_tech4.py para obter o arquivo relatorio_video.docx
-Executar o comando python.exe summarization.py para obter o arquivo resumo.txt
+- Instalar as bibliotecas listadas no item anterior (pip install {biblioteca})
+- Executar o comando python.exe codigo_final_tech4.py para obter o arquivo relatorio_video.docx
+- Executar o comando python.exe summarization.py para obter o arquivo resumo.txt
