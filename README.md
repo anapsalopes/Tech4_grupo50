@@ -6,10 +6,10 @@ Através dos conhecimentos adquiridos na Fase 04 implementa técnicas de reconhe
 
 # Funcionalidades
 
-Reconhecimento facial
-Análise de expressões emocionais
-Detecção de atividades
-Geração de resumo
+- Reconhecimento facial
+- Análise de expressões emocionais
+- Detecção de atividades
+- Geração de resumo
 
 
 # Como os usuários podem utilizá-lo
@@ -33,7 +33,7 @@ No e-mail e/ou discord dos autores do projeto
 
 - Ana Paula de Sá Lopes de Simone (anap.salopes/anapsalopes/analopes@correios.com.br)
 - Christiane Pinheiro Campelo da Silva (christiane_57973/chrispinheiro/christiane@correios.com.br)
-- Leandro Juvenal Marques (/leandrojuvmar/leandrojuvenal@correios.com.br)
+- Leandro Juvenal Marques (/leandrojuvmar/leandro_91731/leandrojuvenal@correios.com.br)
 
 
 # Bibliotecas utilizadas
