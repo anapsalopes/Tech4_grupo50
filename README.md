@@ -35,8 +35,12 @@ No e-mail e/ou discord dos autores do projeto
 - Christiane Pinheiro Campelo da Silva (christiane_57973/chrispinheiro/christiane@correios.com.br)
 - Leandro Juvenal Marques (/leandrojuvmar/leandro_91731/leandrojuvenal@correios.com.br)
 
+# Links com arquivos de video
+- Entrada: tech4.mp4
+- saida: output_video_tech4.mp4
+- Link: https://drive.google.com/drive/folders/1lO2IaA_KcFjXOt9lwYXOtHDIxQXhTPqY?usp=drive_link
 
-# Bibliotecas utilizadas
+  # Bibliotecas utilizadas
 
 - OpenCV
 - Mediapipe
@@ -47,11 +51,6 @@ No e-mail e/ou discord dos autores do projeto
 - python-docx
 - TensorFlow
 - warnings
-
-# Links com arquivos de video
-- Entrada: tech4.mp4
-- saida: output_video_tech4.mp4
-- Link: https://drive.google.com/drive/folders/1lO2IaA_KcFjXOt9lwYXOtHDIxQXhTPqY?usp=drive_link
 
 # Como instalar e rodar o projeto
 
